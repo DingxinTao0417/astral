@@ -28,7 +28,7 @@ export const nav = [
 
 export const hero = {
   intro:
-    '我是星辉，一个做了十年内容的创作者。现在，我把拍摄、剪辑和 AI 使用的经验，都分享在这里。',
+    '我是一名做了十年内容的创作者。现在，我把拍摄、剪辑和 AI 使用的经验，都分享在这里。',
   primaryCta: '去抖音找我',
   secondaryCta: '看 AI 作品',
   /** 首屏底部扇形排开的作品卡，从左到右；to 是点击后去的页面 */
@@ -79,7 +79,7 @@ export const home = {
       kind: 'about',
       to: '/about',
       title: '关于我',
-      desc: '我是星辉，一个做了十年内容的创作者。',
+      desc: '我是一名做了十年内容的创作者。',
       cta: '认识我',
     },
   ],
