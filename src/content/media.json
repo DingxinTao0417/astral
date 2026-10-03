@@ -1,0 +1,242 @@
+{
+  "portrait-1": {
+    "src": "/media/portrait-1.webp",
+    "sm": "/media/portrait-1-sm.webp",
+    "w": 1067,
+    "h": 1600,
+    "smW": 480,
+    "color": "#f8f8f8"
+  },
+  "portrait-2": {
+    "src": "/media/portrait-2.webp",
+    "sm": "/media/portrait-2-sm.webp",
+    "w": 799,
+    "h": 1232,
+    "smW": 467,
+    "color": "#281808"
+  },
+  "portrait-3": {
+    "src": "/media/portrait-3.webp",
+    "sm": "/media/portrait-3-sm.webp",
+    "w": 1086,
+    "h": 1600,
+    "smW": 489,
+    "color": "#181828"
+  },
+  "portrait-4": {
+    "src": "/media/portrait-4.webp",
+    "sm": "/media/portrait-4-sm.webp",
+    "w": 873,
+    "h": 1314,
+    "smW": 478,
+    "color": "#4898b8"
+  },
+  "product-1": {
+    "src": "/media/product-1.webp",
+    "sm": "/media/product-1-sm.webp",
+    "w": 1067,
+    "h": 1600,
+    "smW": 480,
+    "color": "#080808"
+  },
+  "product-2": {
+    "src": "/media/product-2.webp",
+    "sm": "/media/product-2-sm.webp",
+    "w": 750,
+    "h": 1100,
+    "smW": 491,
+    "color": "#080808"
+  },
+  "product-3": {
+    "src": "/media/product-3.webp",
+    "sm": "/media/product-3-sm.webp",
+    "w": 851,
+    "h": 638,
+    "smW": 720,
+    "color": "#080808"
+  },
+  "product-4": {
+    "src": "/media/product-4.webp",
+    "sm": "/media/product-4-sm.webp",
+    "w": 869,
+    "h": 652,
+    "smW": 720,
+    "color": "#080808"
+  },
+  "product-5": {
+    "src": "/media/product-5.webp",
+    "sm": "/media/product-5-sm.webp",
+    "w": 1066,
+    "h": 1600,
+    "smW": 480,
+    "color": "#f8e8d8"
+  },
+  "product-6": {
+    "src": "/media/product-6.webp",
+    "sm": "/media/product-6-sm.webp",
+    "w": 848,
+    "h": 541,
+    "smW": 720,
+    "color": "#181818"
+  },
+  "product-7": {
+    "src": "/media/product-7.webp",
+    "sm": "/media/product-7-sm.webp",
+    "w": 848,
+    "h": 739,
+    "smW": 720,
+    "color": "#f8f8f8"
+  },
+  "product-8": {
+    "src": "/media/product-8.webp",
+    "sm": "/media/product-8-sm.webp",
+    "w": 838,
+    "h": 1288,
+    "smW": 468,
+    "color": "#181818"
+  },
+  "food-1": {
+    "src": "/media/food-1.webp",
+    "sm": "/media/food-1-sm.webp",
+    "w": 990,
+    "h": 658,
+    "smW": 720,
+    "color": "#f8f8e8"
+  },
+  "food-2": {
+    "src": "/media/food-2.webp",
+    "sm": "/media/food-2-sm.webp",
+    "w": 990,
+    "h": 656,
+    "smW": 720,
+    "color": "#f8f8e8"
+  },
+  "food-3": {
+    "src": "/media/food-3.webp",
+    "sm": "/media/food-3-sm.webp",
+    "w": 877,
+    "h": 1322,
+    "smW": 478,
+    "color": "#f8e8e8"
+  },
+  "food-4": {
+    "src": "/media/food-4.webp",
+    "sm": "/media/food-4-sm.webp",
+    "w": 671,
+    "h": 929,
+    "smW": 520,
+    "color": "#282828"
+  },
+  "aerial-1": {
+    "src": "/media/aerial-1.webp",
+    "sm": "/media/aerial-1-sm.webp",
+    "w": 1600,
+    "h": 900,
+    "smW": 720,
+    "color": "#f8f8f8"
+  },
+  "aerial-2": {
+    "src": "/media/aerial-2.webp",
+    "sm": "/media/aerial-2-sm.webp",
+    "w": 1600,
+    "h": 900,
+    "smW": 720,
+    "color": "#78a8d8"
+  },
+  "aerial-3": {
+    "src": "/media/aerial-3.webp",
+    "sm": "/media/aerial-3-sm.webp",
+    "w": 1600,
+    "h": 900,
+    "smW": 720,
+    "color": "#181818"
+  },
+  "aerial-4": {
+    "src": "/media/aerial-4.webp",
+    "sm": "/media/aerial-4-sm.webp",
+    "w": 619,
+    "h": 348,
+    "smW": 619,
+    "color": "#384868"
+  },
+  "aigc-film-poster": {
+    "src": "/media/aigc-film-poster.webp",
+    "sm": "/media/aigc-film-poster-sm.webp",
+    "w": 720,
+    "h": 1280,
+    "smW": 405,
+    "color": "#f8f8f8"
+  },
+  "aigc-character": {
+    "src": "/media/aigc-character.webp",
+    "sm": "/media/aigc-character-sm.webp",
+    "w": 981,
+    "h": 652,
+    "smW": 600,
+    "color": "#f8f8f8"
+  },
+  "aigc-storyboard": {
+    "src": "/media/aigc-storyboard.webp",
+    "sm": "/media/aigc-storyboard-sm.webp",
+    "w": 989,
+    "h": 686,
+    "smW": 600,
+    "color": "#f8f8f8"
+  },
+  "aigc-product": {
+    "src": "/media/aigc-product.webp",
+    "sm": "/media/aigc-product-sm.webp",
+    "w": 1200,
+    "h": 830,
+    "smW": 600,
+    "color": "#080808"
+  },
+  "white-clip": {
+    "src": "/media/white-clip.webp",
+    "sm": "/media/white-clip-sm.webp",
+    "w": 1600,
+    "h": 1067,
+    "smW": 720,
+    "color": "#f8f8f8"
+  },
+  "banner-clip": {
+    "src": "/media/banner-clip.webp",
+    "sm": "/media/banner-clip-sm.webp",
+    "w": 1600,
+    "h": 750,
+    "smW": 720,
+    "color": "#080808"
+  },
+  "white-box": {
+    "src": "/media/white-box.webp",
+    "sm": "/media/white-box-sm.webp",
+    "w": 1188,
+    "h": 944,
+    "smW": 720,
+    "color": "#f8f8f8"
+  },
+  "banner-box": {
+    "src": "/media/banner-box.webp",
+    "sm": "/media/banner-box-sm.webp",
+    "w": 1600,
+    "h": 750,
+    "smW": 720,
+    "color": "#080808"
+  },
+  "selling-1": {
+    "src": "/media/selling-1.webp",
+    "sm": "/media/selling-1-sm.webp",
+    "w": 896,
+    "h": 518,
+    "smW": 720,
+    "color": "#080808"
+  },
+  "selling-2": {
+    "src": "/media/selling-2.webp",
+    "sm": "/media/selling-2-sm.webp",
+    "w": 896,
+    "h": 529,
+    "smW": 720,
+    "color": "#080808"
+  }
+}

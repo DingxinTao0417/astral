@@ -1,0 +1,9 @@
+node_modules
+dist
+*.local
+.vercel
+.DS_Store
+
+# 原始素材（167MB，含未公开的后台截图），只留在本地；
+# 上站用的图由 `npm run media` 压缩后输出到 public/media/
+/assets
