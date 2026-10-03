@@ -39,7 +39,19 @@ export function Contact() {
             <Phrases text={contact.body} />
           </p>
 
-          <p className="mt-10 font-display text-[clamp(1.75rem,6.6vw,3.25rem)] leading-tight text-mist-50">
+          {/* 抖音头像，套一圈镭射描边，方便访客在抖音里认出账号 */}
+          <div className="mx-auto mt-10 size-24 rounded-full bg-[conic-gradient(from_140deg,#ffa3d5,#cdb5ff,#9be8ff,#ffe6f4,#ff78bf,#ad8cff,#ffd9c2,#ffa3d5)] p-[2.5px] shadow-[0_20px_50px_-15px_rgb(255_79_168/0.8)] md:size-28">
+            <img
+              src="/media/avatar.webp"
+              width={320}
+              height={320}
+              alt={`${brand.account}的抖音头像`}
+              loading="lazy"
+              decoding="async"
+              className="size-full rounded-full bg-night-900 object-cover"
+            />
+          </div>
+          <p className="mt-5 font-display text-[clamp(1.75rem,6.6vw,3.25rem)] leading-tight text-mist-50">
             <span className="text-aurora pr-[0.08em] italic">{brand.name}</span>
             <span className="font-semibold tracking-[0.06em]">{brand.cnName}</span>
           </p>
