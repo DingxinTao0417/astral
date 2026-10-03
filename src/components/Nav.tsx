@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { brand, nav } from '../content/site'
 import { cx } from '../lib/cx'
-import { ArrowUpRight, Close, Menu, Sparkle } from './Icons'
+import { ArrowUpRight, Close, Menu } from './Icons'
 
 export function Nav() {
   const { pathname } = useLocation()
@@ -53,9 +53,18 @@ export function Nav() {
       >
         <Link
           to="/"
-          className="group flex items-center gap-2 font-display text-[1.65rem] italic leading-none text-mist-50"
+          className="group -ml-2.5 flex items-center gap-2.5 font-display text-[1.65rem] italic leading-none text-mist-50"
         >
-          <Sparkle className="size-3.5 text-blush-400 transition-transform duration-700 ease-soft group-hover:rotate-180" />
+          {/* logo：抖音头像，外面一圈镭射描边 */}
+          <span className="rounded-full bg-[conic-gradient(from_140deg,#ffa3d5,#cdb5ff,#9be8ff,#ffe6f4,#ff78bf,#ad8cff,#ffd9c2,#ffa3d5)] p-[1.5px] transition-transform duration-500 ease-soft group-hover:scale-110 group-hover:-rotate-6">
+            <img
+              src="/media/avatar.webp"
+              width={320}
+              height={320}
+              alt=""
+              className="size-9 rounded-full bg-night-900 object-cover"
+            />
+          </span>
           {brand.name}
         </Link>
 

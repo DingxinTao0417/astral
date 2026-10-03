@@ -21,7 +21,8 @@ npm run fonts    # 重新生成标题字体（改了标题文字后运行）
 | --- | --- |
 | **往「AI」页加学习资料** | [src/content/learn.ts](src/content/learn.ts)，在 `learnItems` 里加一条，文件里有示例和每个字段的说明 |
 | 任何文字、链接、数据 | [src/content/site.ts](src/content/site.ts)，除学习资料外的文案都在这一个文件 |
-| 抖音主页链接、抖音号 | `site.ts` 里的 `brand.douyinUrl` 和 `brand.douyinId` |
+| 抖音主页链接 | `site.ts` 里的 `brand.douyinUrl` |
+| logo / 头像 | 换掉 `assets/brand/douyin-avatar.jpg` 后告诉 Claude 重新生成 `public/media/avatar.webp` 和图标 |
 | 影像作品的顺序、分类、说明 | `site.ts` 里的 `frames.items` |
 | 增删图片 | 原图放进 `assets/` → 在 [scripts/build-media.mjs](scripts/build-media.mjs) 登记 → `npm run media` → 在 `site.ts` 里引用 id |
 | 颜色、字体 | [src/index.css](src/index.css) 顶部的 `@theme` |

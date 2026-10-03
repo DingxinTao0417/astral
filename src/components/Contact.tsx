@@ -1,23 +1,10 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
 import { brand, contact, nav } from '../content/site'
-import { ArrowUpRight, Check, Copy, Sparkle } from './Icons'
+import { ArrowUpRight, Sparkle } from './Icons'
 import { Phrases } from './Phrases'
 import { Reveal } from './Reveal'
 
 export function Contact() {
-  const [copied, setCopied] = useState(false)
-
-  const copyAccount = async () => {
-    try {
-      await navigator.clipboard.writeText(brand.douyinId)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2200)
-    } catch {
-      // 个别内嵌浏览器不给剪贴板权限：抖音号就显示在按钮上方，可以长按复制
-    }
-  }
-
   return (
     <footer id="contact" className="px-3 pb-8 pt-10 md:px-5 md:pt-16">
       <Reveal>
@@ -55,9 +42,6 @@ export function Contact() {
             <span className="text-aurora pr-[0.08em] italic">{brand.name}</span>
             <span className="font-semibold tracking-[0.06em]">{brand.cnName}</span>
           </p>
-          <p className="mt-3 text-sm text-mist-300">
-            抖音号 <span className="select-all font-mono tracking-[0.12em] text-mist-50">{brand.douyinId}</span>
-          </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <a
@@ -69,17 +53,20 @@ export function Contact() {
               {contact.openCta}
               <ArrowUpRight className="size-4" />
             </a>
-            <button type="button" className="btn btn-ghost h-13 px-7 text-[15px]" onClick={copyAccount}>
-              {copied ? <Check className="size-4 text-blush-300" /> : <Copy className="size-4" />}
-              <span aria-live="polite">{copied ? contact.copied : contact.copyCta}</span>
-            </button>
           </div>
         </div>
       </Reveal>
 
       <div className="mx-auto mt-8 flex max-w-6xl flex-col items-center justify-between gap-5 px-3 text-xs text-mist-500 md:flex-row">
         <Link to="/" className="flex items-center gap-2 font-display text-xl italic text-mist-300">
-          <Sparkle className="size-3 text-blush-400" />
+          <img
+            src="/media/avatar.webp"
+            width={320}
+            height={320}
+            alt=""
+            loading="lazy"
+            className="size-7 rounded-full object-cover ring-1 ring-white/25"
+          />
           {brand.name}
         </Link>
         <ul className="flex gap-6">
