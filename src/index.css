@@ -389,9 +389,27 @@
     }
   }
 
+  /* 首屏各部分的尺寸跟着屏幕高度走，保证底部的工具条在第一屏里。矮屏（笔记本）再收紧一档 */
+  .hero {
+    --hero-title: 27svh;
+    --hero-sub: 9svh;
+    --hero-pt: 5rem;
+    --hero-pb: 2.5rem;
+    --hero-fan: 19svh;
+  }
+  @media (max-height: 760px) {
+    .hero {
+      --hero-title: 22svh;
+      --hero-sub: 7.5svh;
+      --hero-pt: 4.25rem;
+      --hero-pb: 1.25rem;
+      --hero-fan: 14svh;
+    }
+  }
+
   /* 首屏底部的扇形卡组。--o 是卡片相对正中的序号（-2 … 2） */
   .fan {
-    --fan-w: clamp(6.6rem, min(27vw, 21svh), 13rem);
+    --fan-w: clamp(5.4rem, min(27vw, var(--hero-fan)), 13rem);
     position: relative;
     height: calc(var(--fan-w) * 1.04);
   }

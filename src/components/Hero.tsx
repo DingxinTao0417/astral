@@ -12,15 +12,14 @@ const delay = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties
 
 export function Hero() {
   return (
-    <>
-      <section className="relative isolate flex min-h-svh flex-col overflow-hidden">
+      <section className="hero relative isolate flex min-h-svh flex-col overflow-hidden">
         <div aria-hidden="true" className="sky-fade absolute inset-0 -z-10">
           <Aurora className="absolute inset-0" />
           <Stars count={56} seed={7} className="absolute inset-0" />
           <div className="grain absolute inset-0" />
         </div>
 
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-5 pb-12 pt-24 text-center">
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-5 pb-(--hero-pb) pt-(--hero-pt) text-center">
           <h1 className="relative">
             {/* 标题背后的一团柔光，把字从极光里托出来 */}
             <span
@@ -28,7 +27,7 @@ export function Hero() {
               className="absolute left-1/2 top-[38%] -z-10 aspect-[2/1] w-[130%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(12_4_35/0.55),transparent)]"
             />
             <span
-              className="bloom relative inline-block bg-[length:220%_100%] px-[0.06em] font-display text-[clamp(5.5rem,min(35vw,31svh),19rem)] italic leading-[0.84] text-aurora animate-[bloom_1.3s_var(--ease-soft)_both,sheen_9s_ease-in-out_1.3s_infinite_alternate]"
+              className="bloom relative inline-block bg-[length:220%_100%] px-[0.06em] font-display text-[clamp(5.5rem,min(35vw,var(--hero-title)),19rem)] italic leading-[0.84] text-aurora animate-[bloom_1.3s_var(--ease-soft)_both,sheen_9s_ease-in-out_1.3s_infinite_alternate]"
               style={delay(100)}
             >
               {brand.name}
@@ -40,7 +39,7 @@ export function Hero() {
               </span>
             </span>
             <span
-              className="rise mt-4 block pl-[0.14em] font-serif text-[clamp(2rem,min(8.6vw,9svh),4.75rem)] font-bold leading-tight tracking-[0.14em] text-mist-50 [text-shadow:0_2px_40px_rgb(12_4_35/0.6)]"
+              className="rise mt-4 block pl-[0.14em] font-serif text-[clamp(2rem,min(8.6vw,var(--hero-sub)),4.75rem)] font-bold leading-tight tracking-[0.14em] text-mist-50 [text-shadow:0_2px_40px_rgb(12_4_35/0.6)]"
               style={delay(320)}
             >
               {brand.cnName}
@@ -78,10 +77,8 @@ export function Hero() {
         </div>
 
         <Fan />
+        <Marquee items={tools} />
       </section>
-
-      <Marquee items={tools} />
-    </>
   )
 }
 
@@ -120,7 +117,7 @@ function Fan() {
   )
 }
 
-/** 首屏下方无限滚动的工具条 */
+/** 首屏最底部无限滚动的工具条，压在扇形卡组上面，保证第一屏就能看到 */
 function Marquee({ items }: { items: string[] }) {
   const row = (hidden: boolean) => (
     <ul aria-hidden={hidden} className="flex shrink-0 items-center">
@@ -136,7 +133,7 @@ function Marquee({ items }: { items: string[] }) {
     </ul>
   )
   return (
-    <div className="relative z-10 border-y border-white/10 bg-night-900/70 py-4 backdrop-blur-md">
+    <div className="relative z-40 border-y border-white/10 bg-night-900/85 py-4 backdrop-blur-md">
       <div className="fade-x overflow-hidden">
         <div className="animate-marquee flex w-max">
           {row(false)}
