@@ -1,8 +1,12 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { experience } from '../content/site'
 import { cx } from '../lib/cx'
-import { trackSpotlight, useInView } from '../lib/hooks'
+import { gsap, useGSAP } from '../lib/gsap'
+import { prefersReducedMotion, trackSpotlight, useInView } from '../lib/hooks'
+import { Magnet } from './bits/Magnet'
+import { SplitText } from './bits/SplitText'
 import { ArrowRight, ArrowUpRight, Play } from './Icons'
+import { Odometer } from './motion/Odometer'
 import { Reveal } from './Reveal'
 
 /** 「经历」页的正文：四张卡片 */
@@ -30,7 +34,7 @@ interface CardProps {
 
 function Card({ label, title, body, className, delay, pearl, children }: CardProps) {
   return (
-    <Reveal className={className} delay={delay}>
+    <Reveal className={className} delay={delay} y={64}>
       <article
         className={cx('flex h-full flex-col overflow-hidden p-7 md:p-10', pearl ? 'card-pearl' : 'card spot')}
         onPointerMove={pearl ? undefined : trackSpotlight}
@@ -43,14 +47,16 @@ function Card({ label, title, body, className, delay, pearl, children }: CardPro
         >
           {label}
         </p>
-        <h2
+        <SplitText
+          tag="h2"
+          wait={0.2 + (delay ?? 0) / 1000}
           className={cx(
             'mt-4 font-serif text-[2rem] font-bold leading-tight md:text-[2.4rem]',
             pearl ? 'text-night-800' : 'text-mist-50',
           )}
         >
           {title}
-        </h2>
+        </SplitText>
         <p className={cx('mt-3 max-w-md text-pretty text-[15px] leading-8', pearl ? 'text-night-600' : 'text-mist-300')}>
           {body}
         </p>
@@ -63,9 +69,26 @@ function Card({ label, title, body, className, delay, pearl, children }: CardPro
 /* 做内容十年：B 站数据 */
 function Creator() {
   const { creator } = experience
+  const numeral = useRef<HTMLSpanElement>(null)
+
+  // 背后那个空心的「10」比卡片滚得慢一点
+  useGSAP(() => {
+    if (!numeral.current || prefersReducedMotion()) return
+    gsap.fromTo(
+      numeral.current,
+      { yPercent: -14 },
+      {
+        yPercent: 30,
+        ease: 'none',
+        scrollTrigger: { trigger: numeral.current.parentElement, start: 'top bottom', end: 'bottom top', scrub: true },
+      },
+    )
+  }, [])
+
   return (
     <Card label="Creator" title={creator.title} body={creator.body} className="lg:col-span-7">
       <span
+        ref={numeral}
         aria-hidden="true"
         className="pointer-events-none absolute -top-8 right-4 select-none font-display text-[12rem] italic leading-none text-transparent [-webkit-text-stroke:1px_rgb(255_255_255/0.16)] md:text-[16rem]"
       >
@@ -78,8 +101,8 @@ function Creator() {
             className="flex items-baseline justify-between gap-4 border-t border-white/12 py-4 sm:flex-col-reverse sm:justify-end sm:gap-2.5 sm:pb-0 sm:pt-5"
           >
             <dt className="text-[13px] leading-5 text-mist-300">{s.label}</dt>
-            <dd className="font-display text-[2.8rem] leading-none sm:text-[clamp(2.6rem,4.8vw,3.75rem)]">
-              <span className="text-aurora">{s.value}</span>
+            <dd className="flex items-baseline font-display text-[2.8rem] sm:text-[clamp(2.6rem,4.8vw,3.75rem)]">
+              <Odometer value={s.value} gradient="text-aurora" />
               <span className="ml-1 text-[0.36em] font-bold text-blush-200">{s.unit}</span>
             </dd>
           </div>
@@ -131,15 +154,15 @@ function GoalRing({ percent, caption }: { percent: number; caption: string }) {
               strokeDasharray={length}
               strokeDashoffset={inView ? length * (1 - fill) : length}
               opacity={1 - i * 0.18}
-              style={{ transition: `stroke-dashoffset 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) ${0.2 + i * 0.55}s` }}
+              style={{ transition: `stroke-dashoffset 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) ${0.4 + i * 0.55}s` }}
             />
           </g>
         ))}
       </svg>
       <div className="absolute inset-0 grid place-content-center text-center">
-        <p className="text-orchid font-display text-[2.9rem] leading-none">
-          {percent}
-          <span className="text-[0.55em]">%</span>
+        <p className="flex items-baseline justify-center font-display text-[2.9rem]">
+          <Odometer value={percent} gradient="text-orchid" />
+          <span className="text-orchid text-[0.55em]">%</span>
         </p>
         <p className="mt-1 text-[10px] tracking-wide text-night-600">{caption}</p>
       </div>
@@ -158,9 +181,9 @@ function Growth() {
             <p className="flex items-center gap-3 font-display leading-none">
               <span className="text-[1.7rem] text-mist-400">{row.from}</span>
               <ArrowRight className="size-5 text-blush-300" />
-              <span className="text-aurora text-[3.1rem]">
-                {row.to}
-                <span className="ml-0.5 text-[0.4em] font-bold">{row.unit}</span>
+              <span className="flex items-baseline text-[3.1rem]">
+                <Odometer value={row.to} gradient="text-aurora" />
+                <span className="text-aurora ml-0.5 text-[0.4em] font-bold">{row.unit}</span>
               </span>
               <span className="chip ml-auto py-1 text-xs">{row.note}</span>
             </p>
@@ -188,13 +211,43 @@ function Growth() {
 /* 影像是老本行：《守护》 */
 function Film() {
   const { film } = experience
+  const strips = useRef<HTMLDivElement>(null)
+
+  // 上下两条胶片齿孔跟着滚动「走片」，方向相反
+  useGSAP(() => {
+    const el = strips.current
+    if (!el || prefersReducedMotion()) return
+    gsap.utils.toArray<HTMLElement>('.sprockets', el).forEach((strip, i) => {
+      gsap.fromTo(
+        strip,
+        { backgroundPositionX: '0px' },
+        {
+          backgroundPositionX: i ? '-256px' : '256px',
+          ease: 'none',
+          scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
+        },
+      )
+    })
+  }, [])
+
   return (
     <Card label="Film" title={film.title} body={film.body} className="lg:col-span-7" delay={120}>
-      <div aria-hidden="true" className="sprockets absolute inset-x-7 top-3 opacity-70 md:inset-x-10" />
-      <a href={film.href} target="_blank" rel="noreferrer" className="group mt-auto flex items-center gap-5 pt-10">
-        <span className="btn btn-primary size-16 shrink-0 group-hover:-translate-y-0.5">
-          <Play className="ml-0.5 size-6" />
-        </span>
+      <div ref={strips} aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="sprockets absolute inset-x-7 top-3 opacity-70 md:inset-x-10" />
+        <div className="sprockets absolute inset-x-7 bottom-3 opacity-70 md:inset-x-10" />
+      </div>
+      <a
+        href={film.href}
+        target="_blank"
+        rel="noreferrer"
+        data-cursor="播放"
+        className="group relative mt-auto flex items-center gap-5 pt-10"
+      >
+        <Magnet padding={40}>
+          <span className="btn btn-primary size-16 shrink-0">
+            <Play className="ml-0.5 size-6" />
+          </span>
+        </Magnet>
         <span>
           <span className="block font-serif text-[1.85rem] font-bold leading-tight text-mist-50">{film.work}</span>
           <span className="mt-1 inline-flex items-center gap-1 text-sm text-mist-300 transition-colors group-hover:text-blush-300">
@@ -203,7 +256,6 @@ function Film() {
           </span>
         </span>
       </a>
-      <div aria-hidden="true" className="sprockets absolute inset-x-7 bottom-3 opacity-70 md:inset-x-10" />
     </Card>
   )
 }

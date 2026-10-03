@@ -22,8 +22,102 @@
       type="font/woff2"
       crossorigin
     />
+    <!-- 开场加载页的样式直接写在这里：网页的主程序还没下载完的时候它就已经能显示，不会先闪一下白屏 -->
+    <style>
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        color: #fff8fd;
+        /* 保险：万一主程序出错没能把它收走，6 秒后自己淡出，不会一直挡着页面 */
+        animation: boot-failsafe 0.6s 6s forwards;
+      }
+      .boot-panels {
+        position: absolute;
+        inset: 0;
+        display: flex;
+      }
+      .boot-panels i {
+        flex: 1;
+        margin-right: -1px;
+        background: linear-gradient(180deg, #150838, #0c0423 55%, #0a031d);
+      }
+      .boot-center {
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 1.1rem;
+      }
+      .boot-star {
+        width: 2.25rem;
+        height: 2.25rem;
+        fill: #fff;
+        filter: drop-shadow(0 0 14px #ff8cc9) drop-shadow(0 0 36px #8a5cff);
+        animation: boot-pulse 1.6s ease-in-out infinite;
+      }
+      .boot-word {
+        margin: 0;
+        overflow: hidden;
+        padding: 0.08em 0.14em 0.14em;
+        font: italic 400 clamp(3rem, 9vw, 5.5rem) / 1 "Instrument Serif", serif;
+        visibility: hidden;
+      }
+      .boot-meta {
+        position: absolute;
+        inset: auto 0 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding: 0 clamp(1.25rem, 4vw, 3rem) clamp(1.5rem, 4vw, 2.75rem);
+        font: 400 0.6875rem / 1 "DM Mono", ui-monospace, monospace;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #b6a3d6;
+        visibility: hidden;
+      }
+      .boot-count {
+        font: 400 clamp(3rem, 9vw, 6rem) / 0.8 "Instrument Serif", serif;
+        letter-spacing: 0;
+        color: #fff8fd;
+        font-variant-numeric: tabular-nums;
+      }
+      .boot-line {
+        position: absolute;
+        inset: auto 0 0;
+        height: 2px;
+        transform-origin: left;
+        transform: scaleX(0);
+        background: linear-gradient(90deg, #ff78bf, #cdb5ff, #8a5cff);
+      }
+      @keyframes boot-pulse {
+        0%, 100% { transform: scale(0.82) rotate(0deg); opacity: 0.7; }
+        50% { transform: scale(1.12) rotate(45deg); opacity: 1; }
+      }
+      @keyframes boot-failsafe {
+        to { opacity: 0; visibility: hidden; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-star { animation: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot" aria-hidden="true">
+      <div class="boot-panels"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="boot-center">
+        <svg class="boot-star" viewBox="0 0 24 24">
+          <path d="M12 0C12.6 7.2 16.8 11.4 24 12C16.8 12.6 12.6 16.8 12 24C11.4 16.8 7.2 12.6 0 12C7.2 11.4 11.4 7.2 12 0Z" />
+        </svg>
+        <p class="boot-word">Astral</p>
+      </div>
+      <div class="boot-meta">
+        <span>Loading</span>
+        <span class="boot-count">0</span>
+      </div>
+      <div class="boot-line"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

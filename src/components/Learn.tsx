@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { learnItems, learnSamples, type LearnItem } from '../content/learn'
 import { brand, learn } from '../content/site'
 import { trackSpotlight } from '../lib/hooks'
+import { Magnet } from './bits/Magnet'
+import { SplitText } from './bits/SplitText'
 import { ArrowUpRight, Check, Copy, Play, Sparkle } from './Icons'
 import { Reveal } from './Reveal'
 
@@ -51,7 +53,7 @@ export function Learn() {
       <ul key={topic} className="mt-7 grid gap-4 md:mt-9 md:gap-5 lg:grid-cols-2">
         {items.map((item, i) => (
           <li key={item.id}>
-            <Reveal className="h-full" delay={(i % 2) * 100}>
+            <Reveal className="h-full" delay={(i % 2) * 110} y={56}>
               <Card item={item} />
             </Reveal>
           </li>
@@ -139,7 +141,11 @@ function Prompt({ text }: { text: string }) {
         {copied ? <Check className="size-3.5 text-blush-300" /> : <Copy className="size-3.5" />}
         <span aria-live="polite">{copied ? learn.copied : learn.copyCta}</span>
       </button>
-      <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words px-5 pb-5 pt-12 font-mono text-[13px] leading-7 text-mist-100">
+      {/* data-lenis-prevent：鼠标在这个框里滚动时滚的是框里的文字，不是整个页面 */}
+      <pre
+        data-lenis-prevent
+        className="max-h-56 overflow-auto whitespace-pre-wrap break-words px-5 pb-5 pt-12 font-mono text-[13px] leading-7 text-mist-100"
+      >
         {text}
       </pre>
     </div>
@@ -150,15 +156,25 @@ function Prompt({ text }: { text: string }) {
 function Empty() {
   return (
     <section className="mx-auto max-w-6xl px-5 pb-16 md:pb-24">
-      <div className="card flex flex-col items-center px-6 py-16 text-center md:py-24">
-        <Sparkle className="animate-spin-slow size-9 text-blush-300" />
-        <h2 className="mt-7 font-serif text-[clamp(1.8rem,5vw,2.75rem)] font-bold text-mist-50">{learn.emptyTitle}</h2>
-        <p className="mt-4 max-w-md text-pretty text-[15px] leading-8 text-mist-300 md:text-base">{learn.emptyBody}</p>
-        <a href={brand.douyinUrl} target="_blank" rel="noreferrer" className="btn btn-primary mt-9 h-13 px-7 text-[15px]">
-          {learn.emptyCta}
-          <ArrowUpRight className="size-4" />
-        </a>
-      </div>
+      <Reveal y={64}>
+        <div className="card flex flex-col items-center px-6 py-16 text-center md:py-24">
+          <Sparkle className="animate-spin-slow size-9 text-blush-300" />
+          <SplitText
+            tag="h2"
+            wait={0.25}
+            className="mt-7 font-serif text-[clamp(1.8rem,5vw,2.75rem)] font-bold text-mist-50"
+          >
+            {learn.emptyTitle}
+          </SplitText>
+          <p className="mt-4 max-w-md text-pretty text-[15px] leading-8 text-mist-300 md:text-base">{learn.emptyBody}</p>
+          <Magnet className="mt-9">
+            <a href={brand.douyinUrl} target="_blank" rel="noreferrer" className="btn btn-primary h-13 px-7 text-[15px]">
+              {learn.emptyCta}
+              <ArrowUpRight className="size-4" />
+            </a>
+          </Magnet>
+        </div>
+      </Reveal>
     </section>
   )
 }

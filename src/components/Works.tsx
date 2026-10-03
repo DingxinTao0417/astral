@@ -1,15 +1,18 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { works } from '../content/site'
-import { trackSpotlight } from '../lib/hooks'
-import { CountUp } from './CountUp'
+import { gsap, useGSAP } from '../lib/gsap'
+import { prefersReducedMotion, trackSpotlight } from '../lib/hooks'
+import { stage } from '../lib/stage'
+import { SplitText } from './bits/SplitText'
 import { Holo } from './Holo'
 import { ArrowRight, Drag, Expand } from './Icons'
 import { Img } from './Img'
-import { CompareSlider } from './works/CompareSlider'
-import { FilmPhone } from './works/FilmPhone'
 import { useLightbox } from './Lightbox'
+import { Odometer } from './motion/Odometer'
 import { Phrases } from './Phrases'
 import { Reveal } from './Reveal'
+import { CompareSlider } from './works/CompareSlider'
+import { FilmPhone } from './works/FilmPhone'
 
 /** 「作品」页的正文：两个 AI 项目 */
 export function Works() {
@@ -24,10 +27,30 @@ export function Works() {
 /* ── 两个项目共用的外壳和小部件 ───────────────────────── */
 
 function Shell({ index, children }: { index: string; children: ReactNode }) {
+  const root = useRef<HTMLElement>(null)
+
+  // 角上的空心大号序号比卡片本身滚得慢，有一点前后层次
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) return
+      gsap.fromTo(
+        '[data-numeral]',
+        { yPercent: -18 },
+        {
+          yPercent: 42,
+          ease: 'none',
+          scrollTrigger: { trigger: root.current, start: 'top bottom', end: 'bottom top', scrub: true },
+        },
+      )
+    },
+    { scope: root },
+  )
+
   return (
-    <Reveal>
-      <article className="card spot overflow-hidden" onPointerMove={trackSpotlight}>
+    <Reveal y={70}>
+      <article ref={root} className="card spot overflow-hidden" onPointerMove={trackSpotlight}>
         <span
+          data-numeral
           aria-hidden="true"
           className="pointer-events-none absolute -top-4 right-4 select-none font-display text-[8.5rem] italic leading-none text-transparent [-webkit-text-stroke:1px_rgb(255_255_255/0.16)] md:right-8 md:text-[13rem]"
         >
@@ -51,9 +74,13 @@ function Label({ index, tag }: { index: string; tag: string }) {
 
 function Title({ children }: { children: string }) {
   return (
-    <h2 className="mt-5 font-serif text-[clamp(2rem,5.4vw,3.25rem)] font-bold leading-[1.2] text-mist-50">
+    <SplitText
+      tag="h2"
+      wait={0.15}
+      className="mt-5 font-serif text-[clamp(2rem,5.4vw,3.25rem)] font-bold leading-[1.2] text-mist-50"
+    >
       <Phrases text={children} />
-    </h2>
+    </SplitText>
   )
 }
 
@@ -63,6 +90,42 @@ function Body({ children }: { children: ReactNode }) {
 
 function SubTitle({ children }: { children: ReactNode }) {
   return <h3 className="font-mono text-[11px] uppercase tracking-[0.24em] text-mist-400">{children}</h3>
+}
+
+/** 制作流程：几个步骤从左到右依次亮起来，箭头跟着出现 */
+function Flow({ stages }: { stages: string[] }) {
+  const root = useRef<HTMLOListElement>(null)
+
+  useGSAP(
+    (_, contextSafe) => {
+      if (!root.current || prefersReducedMotion()) return
+      const steps = gsap.utils.toArray<HTMLElement>('li', root.current)
+      gsap.set(steps, { autoAlpha: 0, x: -18 })
+      return stage.whenOpen(
+        contextSafe!(() => {
+          gsap.to(steps, {
+            autoAlpha: 1,
+            x: 0,
+            duration: 0.8,
+            stagger: 0.16,
+            scrollTrigger: { trigger: root.current, start: 'top 88%', once: true },
+          })
+        }),
+      )
+    },
+    { scope: root },
+  )
+
+  return (
+    <ol ref={root} className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-2.5">
+      {stages.map((name, i) => (
+        <li key={name} className="flex items-center gap-2">
+          {i > 0 && <ArrowRight className="size-3.5 text-blush-300" />}
+          <span className="chip">{name}</span>
+        </li>
+      ))}
+    </ol>
+  )
 }
 
 /* ── 项目 01：AIGC 商业视频 ───────────────────────────── */
@@ -77,14 +140,7 @@ function FilmProject() {
           <Label index="01" tag={film.tag} />
           <Title>{film.title}</Title>
           <Body>{film.body}</Body>
-          <ol className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-2.5">
-            {film.flow.map((stage, i) => (
-              <li key={stage} className="flex items-center gap-2">
-                {i > 0 && <ArrowRight className="size-3.5 text-blush-300" />}
-                <span className="chip">{stage}</span>
-              </li>
-            ))}
-          </ol>
+          <Flow stages={film.flow} />
         </div>
 
         <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-center">
@@ -93,23 +149,27 @@ function FilmProject() {
 
         <div className="lg:col-start-2">
           <SubTitle>{film.shotsTitle}</SubTitle>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Reveal stagger y={36} className="mt-4 grid gap-4 sm:grid-cols-3">
             {film.shots.map((shot, i) => (
-              <li key={shot.id}>
-                <button type="button" className="group block w-full text-left" onClick={() => open(film.shots, i)}>
-                  <Holo className="holo-quiet" tilt={9}>
-                    <Img id={shot.id} variant="sm" alt={shot.caption} className="aspect-3/2 w-full object-cover" />
-                    <span className="absolute right-2 top-2 z-3 grid size-8 place-items-center rounded-full bg-night-900/75 text-mist-50 backdrop-blur-sm">
-                      <Expand className="size-3.5" />
-                    </span>
-                  </Holo>
-                  <span className="mt-3 block text-[13px] leading-5 text-mist-300 transition-colors group-hover:text-white">
-                    {shot.caption}
+              <button
+                key={shot.id}
+                type="button"
+                data-cursor="查看"
+                className="group block w-full text-left"
+                onClick={() => open(film.shots, i)}
+              >
+                <Holo className="holo-quiet" tilt={9} data-lightbox-thumb={shot.id}>
+                  <Img id={shot.id} variant="sm" alt={shot.caption} className="aspect-3/2 w-full object-cover" />
+                  <span className="absolute right-2 top-2 z-3 grid size-8 place-items-center rounded-full bg-night-900/75 text-mist-50 backdrop-blur-sm">
+                    <Expand className="size-3.5" />
                   </span>
-                </button>
-              </li>
+                </Holo>
+                <span className="mt-3 block text-[13px] leading-5 text-mist-300 transition-colors group-hover:text-white">
+                  {shot.caption}
+                </span>
+              </button>
             ))}
-          </ul>
+          </Reveal>
         </div>
       </div>
     </Shell>
@@ -135,11 +195,11 @@ function VisualProject() {
 
         {/* 结果：一张浅色珠光小卡，在深色里跳出来 */}
         <div className="card-pearl w-full max-w-xs rounded-[1.5rem] px-6 py-5 lg:justify-self-end">
-          <p className="text-orchid font-display text-[4.5rem] leading-[0.9]">
-            <CountUp to={visual.result.value} />
-            <span className="text-[0.5em]">{visual.result.unit}</span>
+          <p className="flex items-baseline font-display text-[4.5rem]">
+            <Odometer value={visual.result.value} gradient="text-orchid" />
+            <span className="text-orchid text-[0.5em]">{visual.result.unit}</span>
           </p>
-          <p className="mt-2 text-sm font-medium text-night-700">{visual.result.label}</p>
+          <p className="mt-1 text-sm font-medium text-night-700">{visual.result.label}</p>
           <p className="mt-1 text-xs text-night-600/70">{visual.credit}</p>
         </div>
       </div>
@@ -176,25 +236,29 @@ function VisualProject() {
 
       <div className="mt-12">
         <SubTitle>{visual.extrasTitle}</SubTitle>
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 md:gap-5">
+        <Reveal stagger y={36} className="mt-4 grid gap-4 sm:grid-cols-2 md:gap-5">
           {visual.extras.map((extra, i) => (
-            <li key={extra.id}>
-              <button type="button" className="group block w-full" onClick={() => open(visual.extras, i)}>
-                <Holo className="holo-quiet" tilt={6}>
-                  <Img
-                    id={extra.id}
-                    alt={extra.caption}
-                    sizes="(min-width: 640px) 45vw, 92vw"
-                    className="aspect-896/518 w-full object-cover"
-                  />
-                  <span className="absolute inset-x-0 bottom-0 z-3 rounded-b-[inherit] bg-linear-to-t from-black/80 to-transparent px-4 pb-3 pt-10 text-left text-[13px] text-mist-50">
-                    {extra.caption}
-                  </span>
-                </Holo>
-              </button>
-            </li>
+            <button
+              key={extra.id}
+              type="button"
+              data-cursor="查看"
+              className="group block w-full"
+              onClick={() => open(visual.extras, i)}
+            >
+              <Holo className="holo-quiet" tilt={6} data-lightbox-thumb={extra.id}>
+                <Img
+                  id={extra.id}
+                  alt={extra.caption}
+                  sizes="(min-width: 640px) 45vw, 92vw"
+                  className="aspect-896/518 w-full object-cover"
+                />
+                <span className="absolute inset-x-0 bottom-0 z-3 rounded-b-[inherit] bg-linear-to-t from-black/80 to-transparent px-4 pb-3 pt-10 text-left text-[13px] text-mist-50">
+                  {extra.caption}
+                </span>
+              </Holo>
+            </button>
           ))}
-        </ul>
+        </Reveal>
       </div>
     </Shell>
   )

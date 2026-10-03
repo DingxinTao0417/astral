@@ -1,26 +1,130 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import { brand, nav } from '../content/site'
 import { cx } from '../lib/cx'
-import { ArrowUpRight, Close, Menu } from './Icons'
+import { gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
+import { prefersReducedMotion } from '../lib/hooks'
+import { scroller } from '../lib/scroll'
+import { stage } from '../lib/stage'
+import { Magnet } from './bits/Magnet'
+import { ArrowUpRight, Close, Menu, Sparkle } from './Icons'
+import { TLink } from './motion/Transition'
+
+const MENU = [{ to: '/', label: '首页' }, ...nav]
 
 export function Nav() {
   const { pathname } = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const header = useRef<HTMLElement>(null)
   const progress = useRef<HTMLDivElement>(null)
+  const bar = useRef<HTMLElement>(null)
+  const links = useRef<HTMLUListElement>(null)
+  const pill = useRef<HTMLSpanElement>(null)
+  const menuTimeline = useRef<gsap.core.Timeline | null>(null)
+  const openRef = useRef(open)
 
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      setScrolled(y > 24)
-      if (progress.current) progress.current.style.scale = `${max > 0 ? Math.min(1, y / max) : 0} 1`
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [pathname])
+    openRef.current = open
+  }, [open])
+
+  // ── 进场、阅读进度、下滑隐藏 / 上滑出现 ──
+  useGSAP(
+    () => {
+      if (!bar.current || !progress.current) return
+      const still = prefersReducedMotion()
+
+      gsap.fromTo(
+        progress.current,
+        { scaleX: 0 },
+        { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: still ? true : 0.4 } },
+      )
+
+      // 往下读的时候收起来让出画面，一往回滚就出现
+      const hide = gsap.to(bar.current, { yPercent: -170, duration: 0.5, ease: 'power3.inOut', paused: true })
+      ScrollTrigger.create({
+        start: 0,
+        end: 'max',
+        onUpdate: (self) => {
+          const y = self.scroll()
+          setScrolled(y > 24)
+          if (still) return
+          if (y < 320 || self.direction < 0 || openRef.current) hide.reverse()
+          else hide.play()
+        },
+      })
+
+      if (still) return
+      // 第一次进站：幕布拉开后导航从上面落下来
+      gsap.set('[data-nav-intro]', { yPercent: -140, autoAlpha: 0 })
+      return stage.whenOpen(() => {
+        gsap.to('[data-nav-intro]', { yPercent: 0, autoAlpha: 1, duration: 1.2, delay: 0.35 })
+      })
+    },
+    { scope: header },
+  )
+
+  // ── 当前页的指示条：在几个导航项之间滑动 ──
+  const placePill = useRef<(slide: boolean) => void>(() => {})
+
+  useGSAP(
+    () => {
+      const list = links.current
+      const el = pill.current
+      if (!list || !el) return
+      let shown = false
+      placePill.current = (slide) => {
+        const active = list.querySelector<HTMLElement>('[aria-current="page"]')
+        if (!active) {
+          shown = false
+          gsap.to(el, { autoAlpha: 0, duration: 0.3, ease: 'power1.out', overwrite: true })
+          return
+        }
+        const move = { x: active.offsetLeft, width: active.offsetWidth }
+        // 从「没有选中项」到有的时候直接出现在位置上，不从别处滑过来
+        const jump = !slide || !shown || prefersReducedMotion()
+        if (jump) gsap.set(el, move)
+        gsap.to(el, { ...move, autoAlpha: 1, duration: jump ? 0.3 : 0.7, ease: 'silk', overwrite: true })
+        shown = true
+      }
+      // 字体加载完、窗口变宽变窄，导航项的宽度会变
+      const resizer = new ResizeObserver(() => placePill.current(false))
+      resizer.observe(list)
+      return () => resizer.disconnect()
+    },
+    { scope: header },
+  )
+
+  useEffect(() => placePill.current(true), [pathname])
+
+  // ── 手机端全屏菜单 ──
+  useGSAP(
+    () => {
+      const timeline = gsap
+        .timeline({ paused: true, defaults: { ease: 'silk' } })
+        .set('#mobile-menu', { visibility: 'visible' })
+        .fromTo(
+          '#mobile-menu',
+          { clipPath: 'circle(0% at calc(100% - 2.75rem) 2.5rem)' },
+          { clipPath: 'circle(150% at calc(100% - 2.75rem) 2.5rem)', duration: 0.9, ease: 'curtain' },
+        )
+        .fromTo('[data-menu-item]', { yPercent: 115 }, { yPercent: 0, duration: 0.9, stagger: 0.06 }, 0.25)
+        .fromTo('[data-menu-foot]', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.7 }, 0.6)
+      if (prefersReducedMotion()) timeline.duration(0.01)
+      menuTimeline.current = timeline
+    },
+    { scope: header },
+  )
+
+  useEffect(() => {
+    const timeline = menuTimeline.current
+    if (!timeline) return
+    if (open) timeline.timeScale(1).play()
+    else timeline.timeScale(1.7).reverse()
+    if (!open) return
+    scroller.lock()
+    return () => scroller.unlock()
+  }, [open])
 
   // 换页后收起手机菜单
   useEffect(() => setOpen(false), [pathname])
@@ -33,102 +137,132 @@ export function Nav() {
   }, [open])
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
+    <header ref={header} className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
       {/* 阅读进度 */}
       <div
         ref={progress}
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-0.5 origin-left bg-linear-to-r from-blush-400 via-iris-300 to-iris-500"
-        style={{ scale: '0 1' }}
+        className="absolute inset-x-0 top-0 z-10 h-0.5 origin-left bg-linear-to-r from-blush-400 via-iris-300 to-iris-500"
+        style={{ transform: 'scaleX(0)' }}
       />
 
-      <nav
-        aria-label="主导航"
-        className={cx(
-          'mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border pl-5 pr-2 transition-[background-color,border-color,box-shadow] duration-500',
-          scrolled || open
-            ? 'border-white/12 bg-night-900/65 shadow-[0_20px_50px_-30px_rgb(7_2_22/0.9)] backdrop-blur-xl'
-            : 'border-transparent',
-        )}
+      {/* 手机端的全屏菜单：从右上角的按钮位置一圈圈展开 */}
+      <div
+        id="mobile-menu"
+        data-lenis-prevent
+        className="invisible fixed inset-0 -z-10 flex flex-col overflow-y-auto bg-night-900 px-6 pb-8 pt-24 md:hidden"
       >
-        <Link
-          to="/"
-          className="group -ml-2.5 flex items-center gap-2.5 font-display text-[1.65rem] italic leading-none text-mist-50"
-        >
-          {/* logo：抖音头像，外面一圈镭射描边 */}
-          <span className="rounded-full bg-[conic-gradient(from_140deg,#ffa3d5,#cdb5ff,#9be8ff,#ffe6f4,#ff78bf,#ad8cff,#ffd9c2,#ffa3d5)] p-[1.5px] transition-transform duration-500 ease-soft group-hover:scale-110 group-hover:-rotate-6">
-            <img
-              src="/media/avatar.webp"
-              width={320}
-              height={320}
-              alt=""
-              className="size-9 rounded-full bg-night-900 object-cover"
-            />
-          </span>
-          {brand.name}
-        </Link>
-
-        <ul className="hidden items-center gap-1 md:flex">
-          {nav.map((item) => (
-            <li key={item.to}>
-              <NavLink
+        <div aria-hidden="true" className="hero-sky pointer-events-none absolute inset-0 -z-10 opacity-60" />
+        <ul className="my-auto">
+          {MENU.map((item, i) => (
+            <li key={item.to} className="overflow-hidden border-b border-white/10">
+              <TLink
                 to={item.to}
-                className={({ isActive }) =>
-                  cx(
-                    'rounded-full px-4 py-2 text-sm transition-colors',
-                    isActive ? 'bg-white/12 text-white' : 'text-mist-300 hover:bg-white/8 hover:text-white',
-                  )
-                }
+                data-menu-item
+                aria-current={pathname === item.to ? 'page' : undefined}
+                className={cx(
+                  'flex items-baseline justify-between py-4 font-serif text-[2.6rem] font-bold leading-tight active:opacity-70',
+                  pathname === item.to ? 'text-aurora' : 'text-mist-50',
+                )}
               >
                 {item.label}
-              </NavLink>
+                <span className="font-mono text-[11px] font-normal tracking-[0.2em] text-mist-400 [-webkit-text-fill-color:currentColor]">
+                  0{i}
+                </span>
+              </TLink>
             </li>
           ))}
         </ul>
+        <p data-menu-foot className="mt-8 flex items-center gap-2.5 text-sm leading-6 text-mist-300">
+          <Sparkle className="size-2.5 shrink-0 text-blush-400" />
+          {brand.slogan}
+        </p>
+      </div>
 
-        <div className="flex items-center gap-1.5">
-          <a href={brand.douyinUrl} target="_blank" rel="noreferrer" className="btn btn-primary h-10 px-4 text-sm">
-            抖音
-            <ArrowUpRight className="size-4" />
-          </a>
-          <button
-            type="button"
-            className="grid size-10 place-items-center rounded-full text-mist-50 transition-colors hover:bg-white/10 md:hidden"
-            aria-label={open ? '关闭菜单' : '打开菜单'}
-            aria-expanded={open}
-            aria-controls="mobile-menu"
-            onClick={() => setOpen((v) => !v)}
+      <div data-nav-intro>
+        <nav
+          ref={bar}
+          aria-label="主导航"
+          className={cx(
+            'mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border pl-5 pr-2 transition-[background-color,border-color,box-shadow] duration-500',
+            scrolled && !open
+              ? 'border-white/12 bg-night-900/65 shadow-[0_20px_50px_-30px_rgb(7_2_22/0.9)] backdrop-blur-xl'
+              : 'border-transparent',
+          )}
+        >
+          <TLink
+            to="/"
+            className="group -ml-2.5 flex items-center gap-2.5 font-display text-[1.65rem] italic leading-none text-mist-50"
           >
-            {open ? <Close className="size-5" /> : <Menu className="size-5" />}
-          </button>
-        </div>
-      </nav>
+            {/* logo：抖音头像，外面一圈镭射描边 */}
+            <span className="rounded-full bg-[conic-gradient(from_140deg,#ffa3d5,#cdb5ff,#9be8ff,#ffe6f4,#ff78bf,#ad8cff,#ffd9c2,#ffa3d5)] p-[1.5px] transition-transform duration-500 ease-soft group-hover:scale-110 group-hover:-rotate-6">
+              <img
+                src="/media/avatar.webp"
+                width={320}
+                height={320}
+                alt=""
+                className="size-9 rounded-full bg-night-900 object-cover"
+              />
+            </span>
+            {brand.name}
+          </TLink>
 
-      {open && (
-        <ul
-          id="mobile-menu"
-          className="rise mx-auto mt-2 max-w-6xl rounded-[1.75rem] border border-white/12 bg-night-900/88 p-3 backdrop-blur-xl md:hidden"
-          style={{ animationDuration: '0.45s' }}
-        >
-          {[{ to: '/', label: '首页' }, ...nav].map((item, i) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                end
-                className={({ isActive }) =>
-                  cx(
-                    'flex items-baseline justify-between rounded-2xl px-4 py-3.5 font-serif text-2xl font-bold active:bg-white/8',
-                    isActive ? 'text-blush-300' : 'text-mist-50',
-                  )
-                }
-              >
-                {item.label}
-                <span className="font-mono text-[11px] font-normal tracking-[0.2em] text-mist-500">0{i}</span>
-              </NavLink>
+          {/* 导航项自己有一层深色玻璃底：首屏的光环正好从它后面经过，没有这层字会被光吃掉 */}
+          <ul
+            ref={links}
+            className="relative hidden items-center gap-1 rounded-full border border-white/8 bg-night-950/40 p-1 backdrop-blur-md md:flex"
+          >
+            <li aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-0">
+              <span ref={pill} className="invisible block h-full rounded-full bg-white/12" />
             </li>
-          ))}
-        </ul>
-      )}
+            {nav.map((item) => {
+              const active = pathname === item.to
+              return (
+                <li key={item.to}>
+                  <TLink
+                    to={item.to}
+                    aria-current={active ? 'page' : undefined}
+                    className={cx(
+                      'group relative block overflow-hidden rounded-full px-4 py-2 text-sm transition-colors duration-300',
+                      active ? 'text-white' : 'text-mist-300 hover:text-white',
+                    )}
+                  >
+                    {/* 鼠标移上去时文字向上翻一格 */}
+                    <span className="block transition-transform duration-500 ease-soft group-hover:-translate-y-[160%]">
+                      {item.label}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 grid translate-y-[160%] place-items-center text-blush-200 transition-transform duration-500 ease-soft group-hover:translate-y-0"
+                    >
+                      {item.label}
+                    </span>
+                  </TLink>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="flex items-center gap-1.5">
+            <Magnet padding={30} strength={0.3}>
+              <a href={brand.douyinUrl} target="_blank" rel="noreferrer" className="btn btn-primary h-10 px-4 text-sm">
+                抖音
+                <ArrowUpRight className="size-4" />
+              </a>
+            </Magnet>
+            <button
+              type="button"
+              className="grid size-10 place-items-center rounded-full text-mist-50 transition-colors hover:bg-white/10 md:hidden"
+              aria-label={open ? '关闭菜单' : '打开菜单'}
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              onClick={() => setOpen((v) => !v)}
+            >
+              {open ? <Close className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
+        </nav>
+      </div>
     </header>
   )
 }

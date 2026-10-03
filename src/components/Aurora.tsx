@@ -167,6 +167,13 @@ export function Aurora({ className }: { className?: string }) {
       visibility.disconnect()
       resizer.disconnect()
       document.removeEventListener('visibilitychange', sync)
+      // 主动把显卡资源还回去。每个页面的页头都有一张极光，来回切页面不归还的话，
+      // 攒到十几张浏览器就会强行回收最早的那张并报警告。
+      // 稍等一下再确认画布真的被移出页面了才归还：本地预览时 React 会故意把每个组件「卸载再装回」一次，
+      // 那种情况下画布还在页面上，不能动它
+      window.setTimeout(() => {
+        if (!canvas.isConnected) gl.getExtension('WEBGL_lose_context')?.loseContext()
+      }, 0)
     }
   }, [])
 

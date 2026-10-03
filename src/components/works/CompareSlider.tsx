@@ -1,6 +1,6 @@
-import { useRef, useState, type CSSProperties, type PointerEvent } from 'react'
-import { cx } from '../../lib/cx'
-import { useInView } from '../../lib/hooks'
+import { useCallback, useRef, type CSSProperties, type PointerEvent } from 'react'
+import { gsap, useGSAP } from '../../lib/gsap'
+import { prefersReducedMotion } from '../../lib/hooks'
 import { Drag } from '../Icons'
 import { Img } from '../Img'
 
@@ -12,36 +12,66 @@ interface CompareSliderProps {
   afterLabel: string
 }
 
-/** 前后对比滑块：左边白底图，右边成品。可拖、可点、可用键盘方向键 */
+/**
+ * 前后对比滑块：左边白底图，右边成品。可拖、可点、可用键盘方向键。
+ * 在访客自己动手之前，分界线跟着页面滚动走：滚过这张图的过程里，白底图一点点被「擦」成成品。
+ */
 export function CompareSlider({ name, before, after, beforeLabel, afterLabel }: CompareSliderProps) {
-  const [pos, setPos] = useState(50)
-  const [touched, setTouched] = useState(false)
-  const [ref, inView] = useInView<HTMLDivElement>()
+  const root = useRef<HTMLDivElement>(null)
+  const range = useRef<HTMLInputElement>(null)
   const dragging = useRef(false)
+  /** 访客自己拖过 / 点过之后，就不再跟着滚动走了 */
+  const touched = useRef(false)
+
+  // 分界线的位置直接写进 CSS 变量，不经过 React，拖动和滚动时都不会触发重新渲染
+  const setPos = useCallback((value: number) => {
+    const pos = Math.max(0, Math.min(100, value))
+    root.current?.style.setProperty('--pos', `${pos}%`)
+    if (range.current) range.current.value = String(Math.round(pos))
+  }, [])
+
+  useGSAP(
+    () => {
+      const el = root.current
+      if (!el || prefersReducedMotion()) return
+      const wipe = { pos: 90 }
+      setPos(wipe.pos)
+      gsap.to(wipe, {
+        pos: 12,
+        ease: 'none',
+        onUpdate: () => {
+          if (!touched.current) setPos(wipe.pos)
+        },
+        scrollTrigger: { trigger: el, start: 'top 82%', end: 'bottom 38%', scrub: 0.5 },
+      })
+    },
+    { scope: root },
+  )
 
   const moveTo = (e: PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    setPos(Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)))
+    setPos(((e.clientX - rect.left) / rect.width) * 100)
   }
 
   return (
     <div
-      ref={ref}
-      className={cx(
-        'relative aspect-32/15 w-full cursor-ew-resize touch-pan-y select-none overflow-hidden rounded-2xl border border-white/10 bg-night-950',
-        // 第一次进入视口时自己晃一下，提示可以拖
-        inView && !touched && 'animate-[peek_2.6s_ease-in-out_0.6s_1]',
-      )}
-      style={{ '--pos': `${pos}%` } as CSSProperties}
+      ref={root}
+      data-cursor="拖动"
+      className="relative aspect-32/15 w-full cursor-ew-resize touch-pan-y select-none overflow-hidden rounded-2xl border border-white/10 bg-night-950"
+      style={{ '--pos': '50%' } as CSSProperties}
       onPointerDown={(e) => {
-        setTouched(true)
         dragging.current = true
         e.currentTarget.setPointerCapture(e.pointerId)
         // 触屏上按下不立刻跳，避免上下滑动页面时误触
-        if (e.pointerType === 'mouse') moveTo(e)
+        if (e.pointerType === 'mouse') {
+          touched.current = true
+          moveTo(e)
+        }
       }}
       onPointerMove={(e) => {
-        if (dragging.current) moveTo(e)
+        if (!dragging.current) return
+        touched.current = true
+        moveTo(e)
       }}
       onPointerUp={() => {
         dragging.current = false
@@ -84,14 +114,15 @@ export function CompareSlider({ name, before, after, beforeLabel, afterLabel }: 
       </div>
 
       <input
+        ref={range}
         type="range"
         className="sr-only"
         aria-label={`${name}：拖动对比${beforeLabel}和${afterLabel}`}
         min={0}
         max={100}
-        value={Math.round(pos)}
+        defaultValue={50}
         onChange={(e) => {
-          setTouched(true)
+          touched.current = true
           setPos(Number(e.target.value))
         }}
       />

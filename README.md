@@ -3,6 +3,8 @@
 抖音号「Astral新星实验室」的个人品牌站，目的是品牌背书，不是求职。
 
 技术栈：React 19 + TypeScript + Tailwind CSS 4 + Vite + React Router，部署到 Vercel。
+动效用了四样东西：GSAP（所有进场、滚动、转场动画）、Lenis（带惯性的平滑滚动）、Vanta.js（首屏的光环）、
+React Bits（几个现成的动效组件，改过之后放在 `src/components/bits/`）。详见下面的「动效说明」。
 
 一共六个页面：首页 `/`、AI 学习 `/ai`、作品 `/works`、经历 `/experience`、影像 `/frames`、关于 `/about`。
 
@@ -11,6 +13,7 @@
 ```bash
 npm run dev      # 本地预览，http://localhost:5173
 npm run build    # 类型检查 + 打包到 dist/
+npm run preview  # 在本地看打包后的成品（先运行 build），http://localhost:4173
 npm run media    # 重新压缩图片（改了 assets/ 或图片清单后运行）
 npm run fonts    # 重新生成标题字体（改了标题文字后运行）
 ```
@@ -28,6 +31,8 @@ npm run fonts    # 重新生成标题字体（改了标题文字后运行）
 | 颜色、字体 | [src/index.css](src/index.css) 顶部的 `@theme` |
 | 首页入口卡片的文字 | `site.ts` 里的 `home.entries` |
 | 某个页面的版式 | `src/pages/` 是每一页的骨架，具体内容在 `src/components/` 下同名文件 |
+| 鼠标移到图片上时光标旁的小字（查看 / 拖动 / 播放） | 对应元素上的 `data-cursor="…"`，全站搜这个词就能找到 |
+| 动效太多 / 太少、想关掉某一个 | 见下面「动效说明」里每一项的「怎么关」 |
 
 改了**标题类文字**（板块标题、卡片标题等用宋体显示的字）后要运行 `npm run fonts`。
 标题字体只打包了用到的字，新字不重新生成会退回系统字体。需要 Python 和 `pip install fonttools brotli`。
@@ -40,16 +45,57 @@ src/
   content/learn.ts     「AI」页的学习资料清单
   content/media.json   图片尺寸清单（npm run media 自动生成）
   pages/               六个页面 + 404
-  components/          页面内容：Hero / Stats / Gateway / Learn / Works / Experience / Frames / About / Contact
+  components/          页面内容：Hero / Manifesto / Stats / Gateway / Learn / Works / Experience / Frames / About / Contact
   components/Aurora    页头的流动极光（WebGL）
   components/Holo      镭射卡外框（3D 倾斜 + 反光）
   components/works/    作品页用的交互组件：手机视频、前后对比滑块
-  index.css            配色、字体、动画
+  components/motion/   动效的「基础设施」：平滑滚动、开场加载页、转场幕布、首屏光环、数字滚轮、滚动字幕
+  components/bits/     从 React Bits 拿来改过的组件：取景框光标、点击火花、磁吸按钮、标题逐字进场、
+                       逐词阅读、图片拖尾、瀑布流
+  lib/gsap.ts          GSAP 的统一入口：插件注册、全站三条缓动曲线、「桌面端」的判断条件
+  lib/vanta-nova.ts    首屏光环的着色器（基于 Vanta.js 的 HALO 改的）
+  lib/stage.ts         「幕布拉开了没有」：进场动画都等它
+  lib/scroll.ts        平滑滚动的开关：锁滚动、回顶部
+  index.css            配色、字体、少量 CSS 动画
 public/media/          压缩后的上站图片和视频（由脚本生成）
 scripts/               图片压缩、字体子集化脚本
 assets/                原始素材，167MB，只留本地，不进 git
 content/               从作品集整理的原始资料（Markdown）
 ```
+
+## 动效说明
+
+每一项都写了它在哪个文件、想关掉怎么关。**手机上**没有光标、光环、钉住滚动和横向画廊这几样（费电，而且没有鼠标也用不上），
+其余都有。访客的系统如果开了「减弱动态效果」，所有动画都会停用，直接显示最终的样子。
+
+| 效果 | 在哪 | 用的什么 | 怎么关 |
+| --- | --- | --- | --- |
+| 平滑滚动（滚轮带惯性） | `components/motion/SmoothScroll.tsx` | Lenis | 在 `App.tsx` 里删掉 `<SmoothScroll />` |
+| 开场加载页（星星 + 数字跑到 100 + 幕布上拉） | `index.html` 里的 `#boot` + `components/motion/Preloader.tsx` | GSAP | 删掉 `index.html` 里的 `<div id="boot">` 整块 |
+| 换页时的五块幕布 | `components/motion/Transition.tsx` | GSAP | 把各处的 `TLink` 换回 react-router 的 `Link` |
+| 取景框光标 | `components/bits/TargetCursor.tsx` | React Bits + GSAP | 在 `App.tsx` 里删掉 `<TargetCursor />`，系统光标会自动回来 |
+| 点击火花 | `components/bits/ClickSpark.tsx` | React Bits | 在 `App.tsx` 里删掉 `<ClickSpark />` |
+| 按钮被鼠标「吸」过去 | `components/bits/Magnet.tsx` | React Bits + GSAP | 去掉按钮外面那层 `<Magnet>` |
+| 首屏光环（穿过标题右上角的星） | `components/motion/VantaNova.tsx` + `lib/vanta-nova.ts` | Vanta.js + three.js | 在 `Hero.tsx` 里删掉 `<VantaNova … />` 那一行，下面的极光还在 |
+| 首屏标题逐字母升起、鼠标视差、滚动时卡组展开 | `components/Hero.tsx` | GSAP SplitText + ScrollTrigger | — |
+| 标语「对焦 → 解码」 | `components/Manifesto.tsx` | GSAP ScrollTrigger | 在 `pages/HomePage.tsx` 里删掉 `<Manifesto />` |
+| 数字像里程表一样滚出来 | `components/motion/Odometer.tsx` | GSAP | — |
+| 首页横向画廊（桌面端） | `components/Gateway.tsx` | GSAP ScrollTrigger | 把文件里的 `mm.add(DESKTOP, …)` 整段删掉，并把样式里的 `desk:` 去掉 |
+| 页脚的巨型品牌字幕、首屏工具条 | `components/motion/VelocityMarquee.tsx` | 思路来自 React Bits，用 GSAP 重写 | — |
+| 标题逐字进场 | `components/bits/SplitText.tsx` | React Bits + GSAP SplitText | 把 `<SplitText>` 换回普通的 `<h2>` |
+| 「关于」页的自述逐词变清楚 | `components/bits/ScrollReveal.tsx` | React Bits + GSAP | 把 `<ScrollReveal>` 换回 `<p>` |
+| 「影像」页头跟着鼠标出现的照片 | `components/bits/ImageTrail.tsx` | React Bits + GSAP | 在 `pages/FramesPage.tsx` 里删掉 `<ImageTrail … />` |
+| 「影像」页换分类时照片滑到新位置 | `components/bits/Masonry.tsx` | React Bits + GSAP | — |
+| 大图从缩略图的位置放大出来 | `components/Lightbox.tsx` | GSAP | — |
+| 「作品」页的前后对比跟着滚动自己擦开 | `components/works/CompareSlider.tsx` | GSAP ScrollTrigger | — |
+
+几个调参数的地方：
+
+- **光环的颜色、粗细、拖尾长短**：`src/lib/vanta-nova.ts` 里 `getDefaultOptions`，每个参数旁边有说明。
+- **全站动画的「手感」**：`src/lib/gsap.ts` 里的三条缓动曲线（silk / soft / curtain）。
+- **光环会自己量帧率**：电脑显卡吃力的话先自动降画质，还不行就关掉、只留极光，不用手动管。
+- React Bits 的组件是把源码拷进项目再改的（不是装的包），所以以后想改哪里直接改 `src/components/bits/` 下的文件。
+  每个文件开头都写了它来自哪个组件、改了什么。React Bits 的授权是 MIT + Commons Clause：自己的网站随便用，不能把这些组件单独拿去卖。
 
 ## 部署到 Vercel
 
