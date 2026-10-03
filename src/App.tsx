@@ -2,9 +2,9 @@ import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router'
 import { Backdrop } from './components/Backdrop'
 import { ClickSpark } from './components/bits/ClickSpark'
-import { TargetCursor } from './components/bits/TargetCursor'
 import { Contact } from './components/Contact'
 import { LightboxProvider } from './components/Lightbox'
+import { CursorTag } from './components/motion/CursorTag'
 import { Preloader } from './components/motion/Preloader'
 import { SmoothScroll } from './components/motion/SmoothScroll'
 import { TransitionProvider } from './components/motion/Transition'
@@ -33,7 +33,7 @@ export default function App() {
         </LightboxProvider>
       </TransitionProvider>
       <ClickSpark />
-      <TargetCursor />
+      <CursorTag />
     </BrowserRouter>
   )
 }

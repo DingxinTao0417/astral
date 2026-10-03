@@ -143,10 +143,9 @@
   button, a {
     touch-action: manipulation;
   }
-  /* 用了取景框光标（TargetCursor）的时候藏掉系统光标 */
-  html.has-reticle,
-  html.has-reticle * {
-    cursor: none !important;
+  /* 能点的按钮显示成小手（Tailwind 4 默认是箭头） */
+  button:not(:disabled) {
+    cursor: pointer;
   }
 }
 

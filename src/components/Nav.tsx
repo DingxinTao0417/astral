@@ -12,9 +12,13 @@ import { TLink } from './motion/Transition'
 
 const MENU = [{ to: '/', label: '首页' }, ...nav]
 
+/** 离页面顶部多少像素以内算「在顶部」。取得很小：一开始往下滚导航就收起，不在首屏的大标题上停留 */
+const TOP_ZONE = 24
+
 export function Nav() {
   const { pathname } = useLocation()
-  const [scrolled, setScrolled] = useState(false)
+  /** 导航正「浮」在正文上面（不在页面顶部，而且没有收起）：这时才带深色玻璃底 */
+  const [floating, setFloating] = useState(false)
   const [open, setOpen] = useState(false)
   const header = useRef<HTMLElement>(null)
   const progress = useRef<HTMLDivElement>(null)
@@ -40,17 +44,20 @@ export function Nav() {
         { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: still ? true : 0.4 } },
       )
 
-      // 往下读的时候收起来让出画面，一往回滚就出现
+      // 三种状态：
+      // 在页面顶部 —— 透明地叠在页头上；
+      // 往下读 —— 整条收上去把画面让出来（不收的话，它会变成一条深色横条压在首屏的大标题上）；
+      // 往回滚 —— 落下来，带一层深色玻璃底，随时可以换页
       const hide = gsap.to(bar.current, { yPercent: -170, duration: 0.5, ease: 'power3.inOut', paused: true })
       ScrollTrigger.create({
         start: 0,
         end: 'max',
         onUpdate: (self) => {
-          const y = self.scroll()
-          setScrolled(y > 24)
-          if (still) return
-          if (y < 320 || self.direction < 0 || openRef.current) hide.reverse()
-          else hide.play()
+          const atTop = self.scroll() <= TOP_ZONE
+          const hidden = !still && !atTop && self.direction > 0 && !openRef.current
+          if (hidden) hide.play()
+          else hide.reverse()
+          setFloating(!atTop && !hidden)
         },
       })
 
@@ -146,6 +153,15 @@ export function Nav() {
         style={{ transform: 'scaleX(0)' }}
       />
 
+      {/* 浮在正文上时，顶上压一层往下渐隐的深色：正文从导航后面经过时不会从上沿露出半截 */}
+      <div
+        aria-hidden="true"
+        className={cx(
+          'pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-linear-to-b from-night-950/90 via-night-950/55 to-transparent transition-opacity duration-500',
+          floating && !open ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+
       {/* 手机端的全屏菜单：从右上角的按钮位置一圈圈展开 */}
       <div
         id="mobile-menu"
@@ -185,8 +201,8 @@ export function Nav() {
           aria-label="主导航"
           className={cx(
             'mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border pl-5 pr-2 transition-[background-color,border-color,box-shadow] duration-500',
-            scrolled && !open
-              ? 'border-white/12 bg-night-900/65 shadow-[0_20px_50px_-30px_rgb(7_2_22/0.9)] backdrop-blur-xl'
+            floating && !open
+              ? 'border-white/12 bg-night-900/70 shadow-[0_20px_50px_-30px_rgb(7_2_22/0.9)] backdrop-blur-xl'
               : 'border-transparent',
           )}
         >
@@ -207,10 +223,14 @@ export function Nav() {
             {brand.name}
           </TLink>
 
-          {/* 导航项自己有一层深色玻璃底：首屏的光环正好从它后面经过，没有这层字会被光吃掉 */}
+          {/* 在页面顶部时导航项自己有一层深色玻璃底：首屏的光环正好从它后面经过，没有这层字会被光吃掉。
+              整条导航浮起来、自己有了底之后，这层就撤掉，免得「胶囊套胶囊」 */}
           <ul
             ref={links}
-            className="relative hidden items-center gap-1 rounded-full border border-white/8 bg-night-950/40 p-1 backdrop-blur-md md:flex"
+            className={cx(
+              'relative hidden items-center gap-1 rounded-full border p-1 transition-[background-color,border-color] duration-500 md:flex',
+              floating ? 'border-transparent' : 'border-white/8 bg-night-950/40 backdrop-blur-md',
+            )}
           >
             <li aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-0">
               <span ref={pill} className="invisible block h-full rounded-full bg-white/12" />

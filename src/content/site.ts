@@ -262,7 +262,7 @@ export const frames: {
 export const about = {
   eyebrow: 'About',
   title: '关于我',
-  portrait: 'portrait-2',
+  portrait: 'portrait-1',
   portraitNote: '出镜的也是我',
   paragraphs: [
     '我是 Astral。数字媒体技术专业出身，拍照、剪片、做账号，一做就是十年。',
