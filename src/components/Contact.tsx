@@ -79,7 +79,7 @@ export function Contact() {
           ))}
         </ul>
         <p>
-          © {new Date().getFullYear()} {brand.account} · {brand.owner}
+          © {new Date().getFullYear()} {brand.account}
         </p>
       </div>
     </footer>
